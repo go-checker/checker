@@ -5,7 +5,7 @@ import (
 )
 
 type TT struct {
-	A string `checker:"len 3,reg ^aasddggas$"`
+	A string `checker:"len 3,regexp ^aasddggas$"`
 }
 
 func TestA(t *testing.T) {

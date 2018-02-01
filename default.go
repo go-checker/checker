@@ -14,5 +14,6 @@ func NewCheckerClassic() *Checker {
 	c := NewChecker()
 	c.AddCheck("len", FuncLen)
 	c.AddCheck("regexp", FuncRegexp)
+	c.AddCheck("range", FuncRange)
 	return c
 }
