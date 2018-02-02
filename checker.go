@@ -7,109 +7,79 @@ import (
 )
 
 type Checker struct {
-	m   map[string]func(v reflect.Value, tag []string) error
-	tag string
+	mf  map[string]MakeProcessFunc // 历遍结构体生成校验函数
+	mp  map[string]Processs        // 直接对结构体校验的函数
+	tag string                     // tag
+	all bool                       // 是检查全部错误
 }
 
+var _ Process = (*Checker)(nil)
+
 func NewChecker() *Checker {
-	return &Checker{
+	c := &Checker{
 		tag: "checker",
-		m:   map[string]func(v reflect.Value, tag []string) error{},
+		mf:  map[string]MakeProcessFunc{},
+		mp:  map[string]Processs{},
 	}
+	c.AddCheck("check", c.processCheck)
+	return c
+}
+
+func NewCheckerClassic() *Checker {
+	c := NewChecker()
+	c.AddCheck("len", NewProcessLen)
+	c.AddCheck("range", NewProcessRange)
+	c.AddCheck("regexp", NewProcessRegexp)
+	return c
+}
+
+func NewCheckerAll() *Checker {
+	c := NewChecker()
+	c.all = true
+	return c
+}
+
+func NewCheckerAllClassic() *Checker {
+	c := NewCheckerClassic()
+	c.all = true
+	return c
 }
 
 func (c *Checker) SetTag(tag string) {
 	c.tag = tag
 }
 
-func (c *Checker) AddCheck(name string, fun func(v reflect.Value, tag []string) error) error {
-	_, ok := c.m[name]
+func (c *Checker) AddCheck(name string, fun MakeProcessFunc) error {
+	_, ok := c.mf[name]
 	if ok {
 		return errors.New("error: Defined method " + name)
 	}
-	c.m[name] = fun
+	c.mf[name] = fun
 	return nil
 }
 
-// 检查遇到第一个就结束
 func (c *Checker) Check(i interface{}) error {
-	return c.check(reflect.ValueOf(i), func(err error) bool {
-		return false
-	})
+	return c.CheckValue(reflect.ValueOf(i))
 }
 
-// 检查出所有的
-func (c *Checker) CheckAll(i interface{}) error {
-	ee := errs{}
-	err := c.check(reflect.ValueOf(i), func(err error) bool {
-		ee = append(ee, err)
-		return true
-	})
-	if err != nil {
-		ee = append(ee, err)
-	}
-	switch len(ee) {
-	case 0:
-		return nil
-	case 1:
-		return ee[0]
-	default:
-		return ee
-	}
-}
-
-func (c *Checker) check(v reflect.Value, f func(error) bool) error {
-	err := checkStruct(v, c.tag, func(vv reflect.Value, t string) error {
-		for _, v0 := range strings.Split(t, ",") {
-			args := []string{}
-			for _, v1 := range strings.Split(v0, " ") {
-				v1 = strings.TrimSpace(v1)
-				if len(v1) != 0 {
-					args = append(args, v1)
-				}
-			}
-			if len(args) == 0 {
-				continue
-			}
-			mf := c.m[args[0]]
-			if mf == nil {
-				return errors.New("error: Undefined method " + args[0])
-			}
-
-			vv = reflect.Indirect(vv)
-			if err := mf(vv, args[1:]); err != nil && !f(err) {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func checkStruct(v reflect.Value, tag string, fun func(reflect.Value, string) error) error {
+func (c *Checker) CheckValue(v reflect.Value) error {
 	switch v.Kind() {
 	case reflect.Struct:
 		t := v.Type()
-		for i, l := 0, t.NumField(); i != l; i++ {
-			ff := t.Field(i)
-			vv, ok := ff.Tag.Lookup(tag)
-			if !ok {
-				return nil
-			}
-			err := fun(v.Field(i), vv)
-			if err != nil {
-				return err
-			}
+		ps, err := c.ProcessStruct(t)
+		if err != nil {
+			return err
 		}
-		return nil
+		if c.all {
+			return ps.CheckValueAll(v)
+		}
+
+		return ps.CheckValue(v)
 	case reflect.Ptr:
-		return checkStruct(v.Elem(), tag, fun)
+		return c.CheckValue(v.Elem())
 	case reflect.Slice, reflect.Array:
 		for i, l := 0, v.Len(); i != l; i++ {
-			err := checkStruct(v.Index(i), tag, fun)
+			err := c.CheckValue(v.Index(i))
 			if err != nil {
 				return err
 			}
@@ -118,7 +88,7 @@ func checkStruct(v reflect.Value, tag string, fun func(reflect.Value, string) er
 	case reflect.Map:
 		ks := v.MapKeys()
 		for _, k := range ks {
-			err := checkStruct(v.MapIndex(k), tag, fun)
+			err := c.CheckValue(v.MapIndex(k))
 			if err != nil {
 				return err
 			}
@@ -128,4 +98,75 @@ func checkStruct(v reflect.Value, tag string, fun func(reflect.Value, string) er
 		return nil
 	}
 	return nil
+}
+
+func (c *Checker) ParserTag(tag string) (prs Processs, err error) {
+	for _, v := range strings.Split(tag, ",") {
+		v = strings.TrimSpace(v)
+		i := strings.Index(v, " ")
+		k := v
+		if i > 0 {
+			k = k[:i]
+		}
+		mp, ok := c.mf[k]
+		if !ok {
+			return nil, errors.New("error: Undefined method " + k)
+		}
+		pr, err := mp(v)
+		if err != nil {
+			return nil, err
+		}
+		prs = append(prs, pr)
+	}
+
+	return prs, nil
+}
+
+func (c *Checker) ProcessStruct(t reflect.Type) (prs Processs, err error) {
+	ppn := t.PkgPath() + "." + t.Name()
+	if tp, ok := c.mp[ppn]; ok {
+		return tp, nil
+	}
+
+	for i, l := 0, t.NumField(); i != l; i++ {
+		tf := t.Field(i)
+
+		// 获取成员的tag
+		tv, ok := tf.Tag.Lookup(c.tag)
+		if !ok {
+			continue
+		}
+
+		// 拼凑 唯一key
+		mk := ppn + "." + tf.Name
+
+		// 尝试获取已经解析过的
+		pp, ok := c.mp[mk]
+		if !ok {
+			// 生成tag 解析
+			pp, err = c.ParserTag(tv)
+			if err != nil {
+				return nil, err
+			}
+			c.mp[mk] = pp
+		}
+
+		// 记录结果
+		if c.all {
+			for _, p := range pp {
+				prs = append(prs, &ProcessStruct{
+					Index:   i,
+					Process: p,
+				})
+			}
+			continue
+		}
+
+		prs = append(prs, &ProcessStruct{
+			Index:   i,
+			Process: pp,
+		})
+	}
+	c.mp[ppn] = prs
+	return prs, nil
 }
