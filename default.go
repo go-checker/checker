@@ -1,6 +1,6 @@
 package checker
 
-var defaults = NewCheckerClassic()
+var defaults = NewChecker()
 
 func CheckValue(i interface{}) error {
 	return defaults.Check(i)

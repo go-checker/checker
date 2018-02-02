@@ -25,7 +25,7 @@ func TestA(t *testing.T) {
 			},
 		},
 	}
-	ch := NewCheckerAllClassic()
+	ch := NewCheckerAll()
 	err := ch.Check(d)
 	ffmt.Mark(err)
 	//ffmt.Puts(ch.mp)

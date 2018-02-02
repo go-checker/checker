@@ -22,11 +22,6 @@ func NewChecker() *Checker {
 		mp:  map[string]Processs{},
 	}
 	c.AddCheck("check", c.processCheck)
-	return c
-}
-
-func NewCheckerClassic() *Checker {
-	c := NewChecker()
 	c.AddCheck("len", NewProcessLen)
 	c.AddCheck("range", NewProcessRange)
 	c.AddCheck("regexp", NewProcessRegexp)
@@ -35,12 +30,6 @@ func NewCheckerClassic() *Checker {
 
 func NewCheckerAll() *Checker {
 	c := NewChecker()
-	c.all = true
-	return c
-}
-
-func NewCheckerAllClassic() *Checker {
-	c := NewCheckerClassic()
 	c.all = true
 	return c
 }
