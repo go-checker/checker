@@ -101,6 +101,14 @@ func (c *Checker) processStruct(t reflect.Type) (prs Processs, err error) {
 			continue
 		}
 
+		if len(tv) == 0 {
+			continue
+		}
+
+		if tv[0] == '-' {
+			continue
+		}
+
 		// 拼凑 唯一key
 		mk := ppn + "." + tf.Name
 
