@@ -52,44 +52,19 @@ func (c *Checker) Check(i interface{}) error {
 }
 
 func (c *Checker) CheckValue(v reflect.Value) error {
-	switch v.Kind() {
-	case reflect.Struct:
-		t := v.Type()
-		ps, err := c.ProcessStruct(t)
-		if err != nil {
-			return err
-		}
-		if c.all {
-			return ps.CheckValueAll(v)
-		}
-
-		return ps.CheckValue(v)
-	case reflect.Ptr:
-		return c.CheckValue(v.Elem())
-	case reflect.Slice, reflect.Array:
-		for i, l := 0, v.Len(); i != l; i++ {
-			err := c.CheckValue(v.Index(i))
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	case reflect.Map:
-		ks := v.MapKeys()
-		for _, k := range ks {
-			err := c.CheckValue(v.MapIndex(k))
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	default:
-		return nil
+	ms := processMaps{}
+	err := c.process(v, ms)
+	if err != nil {
+		return err
 	}
-	return nil
+
+	if c.all {
+		return ms.checkAll()
+	}
+	return ms.check()
 }
 
-func (c *Checker) ParserTag(tag string) (prs Processs, err error) {
+func (c *Checker) parserTag(tag string) (prs Processs, err error) {
 	for _, v := range strings.Split(tag, ",") {
 		v = strings.TrimSpace(v)
 		i := strings.Index(v, " ")
@@ -111,7 +86,7 @@ func (c *Checker) ParserTag(tag string) (prs Processs, err error) {
 	return prs, nil
 }
 
-func (c *Checker) ProcessStruct(t reflect.Type) (prs Processs, err error) {
+func (c *Checker) processStruct(t reflect.Type) (prs Processs, err error) {
 	ppn := t.PkgPath() + "." + t.Name()
 	if tp, ok := c.mp[ppn]; ok {
 		return tp, nil
@@ -133,7 +108,7 @@ func (c *Checker) ProcessStruct(t reflect.Type) (prs Processs, err error) {
 		pp, ok := c.mp[mk]
 		if !ok {
 			// 生成tag 解析
-			pp, err = c.ParserTag(tv)
+			pp, err = c.parserTag(tv)
 			if err != nil {
 				return nil, err
 			}
@@ -141,21 +116,50 @@ func (c *Checker) ProcessStruct(t reflect.Type) (prs Processs, err error) {
 		}
 
 		// 记录结果
-		if c.all {
-			for _, p := range pp {
-				prs = append(prs, &ProcessStruct{
-					Index:   i,
-					Process: p,
-				})
-			}
-			continue
+		for _, p := range pp {
+			prs = append(prs, &ProcessStruct{
+				Index:   i,
+				Process: p,
+			})
 		}
-
-		prs = append(prs, &ProcessStruct{
-			Index:   i,
-			Process: pp,
-		})
 	}
 	c.mp[ppn] = prs
 	return prs, nil
+}
+
+// 找出所有要处理的 value 和 process
+func (c *Checker) process(v reflect.Value, ms processMaps) (err error) {
+	switch v.Kind() {
+	case reflect.Struct:
+		t := v.Type()
+		prs, err := c.processStruct(t)
+		if err != nil {
+			return err
+		}
+		if len(prs) == 0 {
+			return nil
+		}
+		ms[v] = prs
+	case reflect.Ptr:
+		return c.process(v.Elem(), ms)
+	case reflect.Slice, reflect.Array:
+		for i, l := 0, v.Len(); i != l; i++ {
+			err := c.process(v.Index(i), ms)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	case reflect.Map:
+		for _, k := range v.MapKeys() {
+			err := c.process(v.MapIndex(k), ms)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	default:
+		return nil
+	}
+	return nil
 }

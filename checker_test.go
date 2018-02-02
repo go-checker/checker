@@ -12,16 +12,18 @@ type TT1 struct {
 }
 type TT struct {
 	A   string `checker:"len 4,regexp d"`
-	TT1 []TT1  `checker:"len 2,check"`
+	TT1 []TT1  `checker:"len 2"`
 }
 
 func TestA(t *testing.T) {
 
-	d := TT{
-		A: "ssa",
-		TT1: []TT1{
-			{
-				B: "13",
+	d := []TT{
+		{
+			A: "ssa",
+			TT1: []TT1{
+				{
+					B: "13",
+				},
 			},
 		},
 	}
