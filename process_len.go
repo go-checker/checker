@@ -14,8 +14,7 @@ type ProcessLen struct {
 
 var _ Process = (*ProcessLen)(nil)
 
-// ProcessLen
-// "len {min} {max}" or "len {equal}"
+// NewProcessLen "len {min} {max}" or "len {equal}"
 func NewProcessLen(tags string) (Process, error) {
 	tag := strings.Split(tags, " ")
 	tag = tag[1:]

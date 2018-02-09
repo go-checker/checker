@@ -7,10 +7,10 @@ import (
 )
 
 type Checker struct {
-	mf  map[string]MakeProcessFunc // 历遍结构体生成校验函数
-	mp  map[string]Processs        // 直接对结构体校验的函数
+	mf  map[string]MakeProcessFunc // Make process function
+	mp  map[string]Processs        // Cache processs
 	tag string                     // tag
-	all bool                       // 是检查全部错误
+	all bool                       // check all
 }
 
 var _ Process = (*Checker)(nil)

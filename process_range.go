@@ -14,8 +14,7 @@ type ProcessRange struct {
 
 var _ Process = (*ProcessRange)(nil)
 
-// ProcessRange
-// "range {min} {max}"
+// NewProcessRange "range {min} {max}"
 func NewProcessRange(tags string) (Process, error) {
 	tag := strings.Split(tags, " ")
 	tag = tag[1:]

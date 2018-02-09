@@ -14,8 +14,7 @@ type ProcessRegexp struct {
 
 var _ Process = (*ProcessRegexp)(nil)
 
-// ProcessRegexp
-// "regexp {text}"
+// NewProcessRegexp "regexp {text}"
 func NewProcessRegexp(tags string) (Process, error) {
 	i := strings.Index(tags, " ")
 	expr := tags[i+1:]
