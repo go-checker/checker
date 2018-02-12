@@ -87,9 +87,13 @@ func (c *Checker) parserTag(tag string) (prs Processs, err error) {
 }
 
 func (c *Checker) processStruct(t reflect.Type) (prs Processs, err error) {
-	ppn := t.PkgPath() + "." + t.Name()
-	if tp, ok := c.mp[ppn]; ok {
-		return tp, nil
+
+	tn := t.Name()
+	if len(tn) != 0 {
+		tn = t.PkgPath() + "." + tn
+		if tp, ok := c.mp[tn]; ok {
+			return tp, nil
+		}
 	}
 
 	for i, l := 0, t.NumField(); i != l; i++ {
@@ -109,18 +113,15 @@ func (c *Checker) processStruct(t reflect.Type) (prs Processs, err error) {
 			continue
 		}
 
-		// 拼凑 唯一key
-		mk := ppn + "." + tf.Name
-
 		// 尝试获取已经解析过的
-		pp, ok := c.mp[mk]
+		pp, ok := c.mp[tv]
 		if !ok {
 			// 生成tag 解析
 			pp, err = c.parserTag(tv)
 			if err != nil {
 				return nil, err
 			}
-			c.mp[mk] = pp
+			c.mp[tv] = pp
 		}
 
 		// 记录结果
@@ -131,7 +132,10 @@ func (c *Checker) processStruct(t reflect.Type) (prs Processs, err error) {
 			})
 		}
 	}
-	c.mp[ppn] = prs
+
+	if len(tn) != 0 {
+		c.mp[tn] = prs
+	}
 	return prs, nil
 }
 
