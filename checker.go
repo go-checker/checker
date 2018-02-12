@@ -125,7 +125,7 @@ func (c *Checker) processStruct(t reflect.Type) (prs Processs, err error) {
 
 		// 记录结果
 		for _, p := range pp {
-			prs = append(prs, &ProcessStruct{
+			prs = append(prs, &processStruct{
 				Index:   i,
 				Process: p,
 			})

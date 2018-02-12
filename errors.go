@@ -1,6 +1,10 @@
 package checker
 
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
+)
 
 type errs []error
 
@@ -15,4 +19,16 @@ func (e errs) String() string {
 
 func (e errs) Error() string {
 	return e.String()
+}
+
+type errorProcessStruct struct {
+	v     reflect.Value
+	index int
+	err   error
+}
+
+func (e *errorProcessStruct) Error() string {
+	t := e.v.Type()
+	fi := t.Field(e.index)
+	return fmt.Sprintf("%s.%s: %s", t.Name(), fi.Name, e.err)
 }
