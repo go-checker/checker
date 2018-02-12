@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 type ProcessRange struct {
@@ -16,7 +15,7 @@ var _ Process = (*ProcessRange)(nil)
 
 // NewProcessRange "range {min} {max}"
 func NewProcessRange(tags string) (Process, error) {
-	tag := strings.Split(tags, " ")
+	tag := regSpace.Split(tags, -1)
 	tag = tag[1:]
 	switch len(tag) {
 	case 2:
@@ -35,7 +34,7 @@ func NewProcessRange(tags string) (Process, error) {
 			Max:    max,
 		}, nil
 	default:
-		return nil, fmt.Errorf("Checker failed `%v` : Range parameter number %v", tags, len(tag))
+		return nil, fmt.Errorf("failed `%v` : Range parameter number %v", tags, len(tag))
 	}
 }
 
@@ -49,18 +48,18 @@ func (p *ProcessRange) CheckValue(v reflect.Value) error {
 	case reflect.Float32, reflect.Float64:
 		l = v.Float()
 	default:
-		return fmt.Errorf("Checker failed `%v` : range %s", p.Origin, v.Kind().String())
+		return fmt.Errorf("failed `%v` : range %s", p.Origin, v.Kind().String())
 	}
 
 	if p.Min >= p.Max {
 		if l != p.Min {
-			return fmt.Errorf("Checker failed `%v` :  %v != %v", p.Origin, l, p.Min)
+			return fmt.Errorf("failed `%v` :  %v != %v", p.Origin, l, p.Min)
 		}
 	} else {
 		if l < p.Min {
-			return fmt.Errorf("Checker failed `%v` : %v < %v", p.Origin, l, p.Min)
+			return fmt.Errorf("failed `%v` : %v < %v", p.Origin, l, p.Min)
 		} else if l >= p.Max {
-			return fmt.Errorf("Checker failed `%v` : %v >= %v", p.Origin, l, p.Max)
+			return fmt.Errorf("failed `%v` : %v >= %v", p.Origin, l, p.Max)
 		}
 	}
 	return nil

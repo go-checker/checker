@@ -2,7 +2,10 @@ package checker
 
 import (
 	"reflect"
+	"regexp"
 )
+
+var regSpace = regexp.MustCompile(`\s`)
 
 type MakeProcessFunc func(tag string) (Process, error)
 
