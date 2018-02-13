@@ -43,7 +43,7 @@ func NewProcessLen(tags string) (Process, error) {
 			Max:    max,
 		}, nil
 	default:
-		return nil, fmt.Errorf("failed `%v` : Len parameter number %v", tags, len(tag))
+		return nil, fmt.Errorf("invalid `%v`: Len parameter number %v", tags, len(tag))
 	}
 }
 
@@ -51,19 +51,19 @@ func (p *ProcessLen) CheckValue(v reflect.Value) error {
 	switch v.Kind() {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice, reflect.String:
 	default:
-		return fmt.Errorf("failed `%v` : len %s", p.Origin, v.Kind().String())
+		return fmt.Errorf("invalid `%v`: len %s", p.Origin, v.Kind().String())
 	}
 
 	l := int64(v.Len())
 	if p.Min >= p.Max {
 		if l != p.Min {
-			return fmt.Errorf("failed `%v` : %v != %v", p.Origin, l, p.Min)
+			return fmt.Errorf("invalid `%v`: %v != %v", p.Origin, l, p.Min)
 		}
 	} else {
 		if l < p.Min {
-			return fmt.Errorf("failed `%v` : %v < %v", p.Origin, l, p.Min)
+			return fmt.Errorf("invalid `%v`: %v < %v", p.Origin, l, p.Min)
 		} else if l >= p.Max {
-			return fmt.Errorf("failed `%v` : %v >= %v", p.Origin, l, p.Max)
+			return fmt.Errorf("invalid `%v`: %v >= %v", p.Origin, l, p.Max)
 		}
 	}
 	return nil

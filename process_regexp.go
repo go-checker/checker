@@ -31,7 +31,7 @@ func NewProcessRegexp(tags string) (Process, error) {
 func (p *ProcessRegexp) CheckValue(v reflect.Value) error {
 	s := v.String()
 	if !p.Reg.MatchString(s) {
-		return fmt.Errorf("failed `%v` : %s", p.Origin, s)
+		return fmt.Errorf("invalid `%v`: %s", p.Origin, s)
 	}
 	return nil
 }

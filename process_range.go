@@ -34,7 +34,7 @@ func NewProcessRange(tags string) (Process, error) {
 			Max:    max,
 		}, nil
 	default:
-		return nil, fmt.Errorf("failed `%v` : Range parameter number %v", tags, len(tag))
+		return nil, fmt.Errorf("invalid `%v`: Range parameter number %v", tags, len(tag))
 	}
 }
 
@@ -48,18 +48,18 @@ func (p *ProcessRange) CheckValue(v reflect.Value) error {
 	case reflect.Float32, reflect.Float64:
 		l = v.Float()
 	default:
-		return fmt.Errorf("failed `%v` : range %s", p.Origin, v.Kind().String())
+		return fmt.Errorf("invalid `%v`: range %s", p.Origin, v.Kind().String())
 	}
 
 	if p.Min >= p.Max {
 		if l != p.Min {
-			return fmt.Errorf("failed `%v` :  %v != %v", p.Origin, l, p.Min)
+			return fmt.Errorf("invalid `%v`:  %v != %v", p.Origin, l, p.Min)
 		}
 	} else {
 		if l < p.Min {
-			return fmt.Errorf("failed `%v` : %v < %v", p.Origin, l, p.Min)
+			return fmt.Errorf("invalid `%v`: %v < %v", p.Origin, l, p.Min)
 		} else if l >= p.Max {
-			return fmt.Errorf("failed `%v` : %v >= %v", p.Origin, l, p.Max)
+			return fmt.Errorf("invalid `%v`: %v >= %v", p.Origin, l, p.Max)
 		}
 	}
 	return nil
