@@ -1,5 +1,5 @@
 # Checker
-Golang Check data structure
+Check the structure of the field data is valid
 
  - [English](./README.md)
  - [简体中文](./README_cn.md)

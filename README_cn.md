@@ -1,5 +1,5 @@
 # Checker
-golang 结构体里的数据校验
+golang 检查结构体里的字段数据是否正确
 
  - [English](./README.md)
  - [简体中文](./README_cn.md)
