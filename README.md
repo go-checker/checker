@@ -6,12 +6,12 @@ Check the structure of the field data is valid
  
 ## Install
 ``` bash
-go get -u -v gopkg.in/checker.v1
+go get -u -v github.com/wzshiming/checker
 ```
 
 ## Usage
 
-[API Documentation](http://godoc.org/gopkg.in/checker.v1)
+[API Documentation](http://godoc.org/github.com/wzshiming/checker)
 
 [Examples](./examples/main.go)
 
@@ -22,7 +22,7 @@ package main
 import (
 	"gopkg.in/ffmt.v1"
 
-	checker "gopkg.in/checker.v1"
+	checker "github.com/wzshiming/checker"
 )
 
 type TT0 struct {

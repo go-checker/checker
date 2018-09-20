@@ -3,7 +3,7 @@ package main
 import (
 	"gopkg.in/ffmt.v1"
 
-	checker "gopkg.in/checker.v1"
+	"github.com/wzshiming/checker"
 )
 
 type TT0 struct {

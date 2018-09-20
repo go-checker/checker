@@ -6,12 +6,12 @@ golang 检查结构体里的字段数据是否正确
  
 ## 安装
 ``` bash
-go get -u -v gopkg.in/checker.v1
+go get -u -v github.com/wzshiming/checker
 ```
 
 ## 用法
 
-[API 文档](http://godoc.org/gopkg.in/checker.v1)
+[API 文档](http://godoc.org/github.com/wzshiming/checker)
 
 [示例](./examples/main.go)
 
@@ -22,7 +22,7 @@ package main
 import (
 	"gopkg.in/ffmt.v1"
 
-	checker "gopkg.in/checker.v1"
+	checker "github.com/wzshiming/checker"
 )
 
 type TT0 struct {
